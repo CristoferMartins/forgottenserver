@@ -30,7 +30,6 @@ class Teleport;
 class TrashHolder;
 class Mailbox;
 class MagicField;
-class QTreeLeafNode;
 class BedItem;
 
 using CreatureVector = std::vector<Creature*>;

@@ -1157,7 +1157,7 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 
 void Tile::removeCreature(Creature* creature)
 {
-	g_game.map.getQTNode(tilePos.x, tilePos.y)->removeCreature(creature);
+	g_game.map.getQuadrant(tilePos.x, tilePos.y)->removeCreature(creature);
 	removeThing(creature, 0);
 }
 
