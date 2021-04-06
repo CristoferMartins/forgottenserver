@@ -75,12 +75,6 @@ class AStarNodes
 
 using SpectatorCache = std::map<Position, SpectatorVec>;
 
-constexpr int int_ceil(float f)
-{
-	const int i = static_cast<int>(f);
-	return f > i ? i + 1 : i;
-}
-
 // change this to your map settings
 static constexpr int32_t MAX_MAP_WIDTH = 33000;
 static constexpr int32_t MAX_MAP_HEIGHT = 33000;
@@ -89,8 +83,8 @@ static constexpr int32_t FLOOR_BITS = 5;
 static constexpr int32_t FLOOR_SIZE = (1 << FLOOR_BITS);
 static constexpr int32_t FLOOR_MASK = (FLOOR_SIZE - 1);
 
-static constexpr int32_t QUADRANT_ARRAY_X_SIZE = int_ceil(static_cast<float>(MAX_MAP_WIDTH) / FLOOR_SIZE) + 1;
-static constexpr int32_t QUADRANT_ARRAY_Y_SIZE = int_ceil(static_cast<float>(MAX_MAP_HEIGHT) / FLOOR_SIZE) + 1;
+static constexpr int32_t QUADRANT_ARRAY_X_SIZE = static_cast<int32_t>(static_cast<float>(MAX_MAP_WIDTH) / FLOOR_SIZE + 1) + 1;
+static constexpr int32_t QUADRANT_ARRAY_Y_SIZE = static_cast<int32_t>(static_cast<float>(MAX_MAP_HEIGHT) / FLOOR_SIZE + 1) + 1;
 
 struct Floor {
 	constexpr Floor() = default;
