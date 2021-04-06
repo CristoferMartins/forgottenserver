@@ -270,12 +270,12 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 	oldTile.removeThing(&creature, 0);
 
 	MapQuadrant* quadrant = getQuadrant(oldPos.x, oldPos.y);
-	MapQuadrant* oldQuadrant = getQuadrant(newPos.x, newPos.y);
+	MapQuadrant* newQuadrant = getQuadrant(newPos.x, newPos.y);
 
 	// Switch the node ownership
-	if (quadrant != oldQuadrant) {
+	if (quadrant != newQuadrant) {
 		quadrant->removeCreature(&creature);
-		oldQuadrant->addCreature(&creature);
+		newQuadrant->addCreature(&creature);
 	}
 
 	//add the creature
