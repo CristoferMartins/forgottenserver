@@ -109,7 +109,7 @@ class QTreeLeafNode;
 class MapQuadrant
 {
 	public:
-		constexpr MapQuadrant() = default;
+		MapQuadrant() = default;
 		~MapQuadrant();
 
 		// non-copyable

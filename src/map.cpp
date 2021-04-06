@@ -134,6 +134,9 @@ void Map::removeTile(uint16_t x, uint16_t y, uint8_t z)
 	}
 
 	const MapQuadrant* quadrant = createQuadrant(x, y);
+	if (!quadrant) {
+		return;
+	}
 
 	const Floor* floor = quadrant->getFloor(z);
 	if (!floor) {
