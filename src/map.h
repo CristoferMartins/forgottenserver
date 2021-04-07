@@ -73,7 +73,7 @@ class AStarNodes
 		int_fast32_t closedNodes;
 };
 
-using SpectatorCache = std::map<Position, SpectatorVec>;
+using SpectatorCache = std::map<uint64_t, SpectatorVec>;
 
 // change this to your map settings
 static constexpr int32_t MAX_MAP_WIDTH = 33000;
@@ -106,6 +106,7 @@ class MapQuadrant
 		CreatureData(const Position& position, Creature* creature) : position(position), creature(creature) {}
 		Position position;
 		Creature* creature = nullptr;
+		std::vector<uint64_t> spectatorCacheNumberVec;
 	};
 
 	using CreatureDataVector = std::vector<CreatureData>;
@@ -126,6 +127,7 @@ class MapQuadrant
 		void addCreature(Creature* c, const Position& newPosition);
 		void removeCreature(Creature* c);
 		void updateCreaturePosition(Creature* c, const Position& newPosition);
+		void clearSpectatorCache(Creature* c);
 	private:
 		Floor* array[MAP_MAX_LAYERS] = {};
 		CreatureDataVector creatureVec;
@@ -201,8 +203,8 @@ class Map
 		                   int32_t minRangeX = 0, int32_t maxRangeX = 0,
 		                   int32_t minRangeY = 0, int32_t maxRangeY = 0);
 
-		void clearSpectatorCache();
-		void clearPlayersSpectatorCache();
+		void clearSpectatorCache(bool playerCache);
+		void clearSpectatorCache(const Creature* creature, const std::vector<uint64_t>& spectatorCacheNumberVec);
 
 		/**
 		  * Checks if you can throw an object to that position
@@ -274,7 +276,7 @@ class Map
 		void getSpectatorsInternal(SpectatorVec& spectators, const Position& centerPos,
 		                           int32_t minRangeX, int32_t maxRangeX,
 		                           int32_t minRangeY, int32_t maxRangeY,
-		                           int32_t minRangeZ, int32_t maxRangeZ, bool onlyPlayers) const;
+		                           int32_t minRangeZ, int32_t maxRangeZ, bool onlyPlayers, uint64_t cachePositionNumber) const;
 
 		friend class Game;
 		friend class IOMap;

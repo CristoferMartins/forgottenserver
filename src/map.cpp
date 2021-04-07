@@ -233,6 +233,9 @@ bool Map::placeCreature(const Position& centerPos, Creature* creature, bool exte
 		}
 	}
 
+	// when we add a new creature to the map, we should invalidate ALL spectator caches
+	clearSpectatorCache(creature->getPlayer() != nullptr);
+
 	int32_t index = 0;
 	uint32_t flags = 0;
 	Item* toItem = nullptr;
@@ -275,6 +278,8 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 
 	MapQuadrant* quadrant = getQuadrant(oldPos.x, oldPos.y);
 	MapQuadrant* newQuadrant = getQuadrant(newPos.x, newPos.y);
+
+	quadrant->clearSpectatorCache(&creature);
 
 	// Switch the node ownership
 	if (quadrant != newQuadrant) {
@@ -322,7 +327,7 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 	newTile.postAddNotification(&creature, &oldTile, 0);
 }
 
-void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& centerPos, int32_t minRangeX, int32_t maxRangeX, int32_t minRangeY, int32_t maxRangeY, int32_t minRangeZ, int32_t maxRangeZ, bool onlyPlayers) const
+void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& centerPos, int32_t minRangeX, int32_t maxRangeX, int32_t minRangeY, int32_t maxRangeY, int32_t minRangeZ, int32_t maxRangeZ, bool onlyPlayers, uint64_t cachePositionNumber) const
 {
 	int_fast16_t min_y = centerPos.y + minRangeY;
 	int_fast16_t min_x = centerPos.x + minRangeX;
@@ -344,9 +349,9 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 
 	for (int_fast32_t ny = starty1; ny <= endy2; ny += FLOOR_SIZE) {
 		for (int_fast32_t nx = startx1; nx <= endx2; nx += FLOOR_SIZE) {
-			if (const MapQuadrant* quadrant = getQuadrant(nx, ny)) {
-				const auto& creatureDataVec = (onlyPlayers ? quadrant->playerVec : quadrant->creatureVec);
-				for (const auto& creatureData : creatureDataVec) {
+			if (MapQuadrant* quadrant = getQuadrant(nx, ny)) {
+				auto& creatureDataVec = (onlyPlayers ? quadrant->playerVec : quadrant->creatureVec);
+				for (auto& creatureData : creatureDataVec) {
 					const Position& cpos = creatureData.position;
 					if (minRangeZ > cpos.z || maxRangeZ < cpos.z) {
 						continue;
@@ -358,6 +363,9 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 					}
 
 					spectators.emplace_back(creatureData.creature);
+					if (cachePositionNumber != 0) {
+						creatureData.spectatorCacheNumberVec.push_back(cachePositionNumber);
+					}
 				}
 			}
 		}
@@ -378,9 +386,12 @@ void Map::getSpectators(SpectatorVec& spectators, const Position& centerPos, boo
 	minRangeY = (minRangeY == 0 ? -maxViewportY : -minRangeY);
 	maxRangeY = (maxRangeY == 0 ? maxViewportY : maxRangeY);
 
+	uint64_t cachePositionNumber = 0;
+
 	if (minRangeX == -maxViewportX && maxRangeX == maxViewportX && minRangeY == -maxViewportY && maxRangeY == maxViewportY && multifloor) {
+		cachePositionNumber = centerPos.toUint64();
 		if (onlyPlayers) {
-			auto it = playersSpectatorCache.find(centerPos);
+			auto it = playersSpectatorCache.find(cachePositionNumber);
 			if (it != playersSpectatorCache.end()) {
 				if (!spectators.empty()) {
 					spectators.addSpectators(it->second);
@@ -393,7 +404,7 @@ void Map::getSpectators(SpectatorVec& spectators, const Position& centerPos, boo
 		}
 
 		if (!foundCache) {
-			auto it = spectatorCache.find(centerPos);
+			auto it = spectatorCache.find(cachePositionNumber);
 			if (it != spectatorCache.end()) {
 				if (!onlyPlayers) {
 					if (!spectators.empty()) {
@@ -442,26 +453,36 @@ void Map::getSpectators(SpectatorVec& spectators, const Position& centerPos, boo
 			maxRangeZ = centerPos.z;
 		}
 
-		getSpectatorsInternal(spectators, centerPos, minRangeX, maxRangeX, minRangeY, maxRangeY, minRangeZ, maxRangeZ, onlyPlayers);
+		getSpectatorsInternal(spectators, centerPos, minRangeX, maxRangeX, minRangeY, maxRangeY, minRangeZ, maxRangeZ, onlyPlayers, cachePositionNumber);
 
-		if (cacheResult) {
+		if (cacheResult && !spectators.empty()) {
 			if (onlyPlayers) {
-				playersSpectatorCache[centerPos] = spectators;
+				playersSpectatorCache[cachePositionNumber] = spectators;
 			} else {
-				spectatorCache[centerPos] = spectators;
+				spectatorCache[cachePositionNumber] = spectators;
 			}
 		}
 	}
 }
 
-void Map::clearSpectatorCache()
+void Map::clearSpectatorCache(bool playerCache)
 {
 	spectatorCache.clear();
+	if (playerCache) {
+		playersSpectatorCache.clear();
+	}
 }
 
-void Map::clearPlayersSpectatorCache()
+void Map::clearSpectatorCache(const Creature* creature, const std::vector<uint64_t>& spectatorCacheNumberVec)
 {
-	playersSpectatorCache.clear();
+	for (uint64_t tmp : spectatorCacheNumberVec) {
+		spectatorCache.erase(tmp);
+	}
+	if (creature->getPlayer()) {
+		for (uint64_t tmp : spectatorCacheNumberVec) {
+			spectatorCache.erase(tmp);
+		}
+	}
 }
 
 bool Map::canThrowObjectTo(const Position& fromPos, const Position& toPos, bool checkLineOfSight /*= true*/,
@@ -918,6 +939,15 @@ void MapQuadrant::updateCreaturePosition(Creature* c, const Position& newPositio
 	creatureVec[c->getMapQuadrantCacheIndex()].position = newPosition;
 	if (c->getPlayer()) {
 		playerVec[c->getMapQuadrantPlayerCacheIndex()].position = newPosition;
+	}
+}
+
+void MapQuadrant::clearSpectatorCache(Creature* c)
+{
+	auto& vec = creatureVec[c->getMapQuadrantCacheIndex()].spectatorCacheNumberVec;
+	if (!vec.empty()) {
+		g_game.map.clearSpectatorCache(c, vec);
+		vec.clear();
 	}
 }
 
