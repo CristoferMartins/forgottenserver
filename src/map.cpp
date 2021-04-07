@@ -241,7 +241,7 @@ bool Map::placeCreature(const Position& centerPos, Creature* creature, bool exte
 	toCylinder->internalAddThing(creature);
 
 	const Position& dest = toCylinder->getPosition();
-	getQuadrant(dest.x, dest.y)->addCreature(creature);
+	getQuadrant(dest.x, dest.y)->addCreature(creature, dest);
 	return true;
 }
 
@@ -279,7 +279,9 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 	// Switch the node ownership
 	if (quadrant != newQuadrant) {
 		quadrant->removeCreature(&creature);
-		newQuadrant->addCreature(&creature);
+		newQuadrant->addCreature(&creature, newPos);
+	} else {
+		quadrant->updateCreaturePosition(&creature, newPos);
 	}
 
 	//add the creature
@@ -343,9 +345,9 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 	for (int_fast32_t ny = starty1; ny <= endy2; ny += FLOOR_SIZE) {
 		for (int_fast32_t nx = startx1; nx <= endx2; nx += FLOOR_SIZE) {
 			if (const MapQuadrant* quadrant = getQuadrant(nx, ny)) {
-				const CreatureVector& node_list = (onlyPlayers ? quadrant->player_list : quadrant->creature_list);
-				for (Creature* creature : node_list) {
-					const Position& cpos = creature->getPosition();
+				const auto& creatureDataVec = (onlyPlayers ? quadrant->playerVec : quadrant->creatureVec);
+				for (const auto& creatureData : creatureDataVec) {
+					const Position& cpos = creatureData.position;
 					if (minRangeZ > cpos.z || maxRangeZ < cpos.z) {
 						continue;
 					}
@@ -355,7 +357,7 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 						continue;
 					}
 
-					spectators.emplace_back(creature);
+					spectators.emplace_back(creatureData.creature);
 				}
 			}
 		}
@@ -885,27 +887,37 @@ Floor* MapQuadrant::createFloor(uint32_t z)
 	return array[z];
 }
 
-void MapQuadrant::addCreature(Creature* c)
+void MapQuadrant::addCreature(Creature* c, const Position& newPosition)
 {
-	creature_list.push_back(c);
+	c->setSpectatorCacheIndex(creatureVec.size());
+	creatureVec.emplace_back(newPosition, c);
 
 	if (c->getPlayer()) {
-		player_list.push_back(c);
+		c->setSpectatorPlayerCacheIndex(playerVec.size());
+		playerVec.emplace_back(newPosition, c);
 	}
 }
 
 void MapQuadrant::removeCreature(Creature* c)
 {
-	auto iter = std::find(creature_list.begin(), creature_list.end(), c);
-	assert(iter != creature_list.end());
-	*iter = creature_list.back();
-	creature_list.pop_back();
+	size_t spectatorCacheIndex = c->getSpectatorCacheIndex();
+	creatureVec[spectatorCacheIndex] = creatureVec.back();
+	creatureVec[spectatorCacheIndex].creature->setSpectatorCacheIndex(spectatorCacheIndex);
+	creatureVec.pop_back();
 
 	if (c->getPlayer()) {
-		iter = std::find(player_list.begin(), player_list.end(), c);
-		assert(iter != player_list.end());
-		*iter = player_list.back();
-		player_list.pop_back();
+		size_t spectatorPlayerCacheIndex = c->getSpectatorPlayerCacheIndex();
+		playerVec[spectatorPlayerCacheIndex] = playerVec.back();
+		playerVec[spectatorPlayerCacheIndex].creature->setSpectatorPlayerCacheIndex(spectatorPlayerCacheIndex);
+		playerVec.pop_back();
+	}
+}
+
+void MapQuadrant::updateCreaturePosition(Creature* c, const Position& newPosition)
+{
+	creatureVec[c->getSpectatorCacheIndex()].position = newPosition;
+	if (c->getPlayer()) {
+		playerVec[c->getSpectatorPlayerCacheIndex()].position = newPosition;
 	}
 }
 

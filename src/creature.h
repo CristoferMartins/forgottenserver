@@ -458,6 +458,19 @@ class Creature : virtual public Thing
 		bool getPathTo(const Position& targetPos, std::vector<Direction>& dirList, const FindPathParams& fpp) const;
 		bool getPathTo(const Position& targetPos, std::vector<Direction>& dirList, int32_t minTargetDist, int32_t maxTargetDist, bool fullPathSearch = true, bool clearSight = true, int32_t maxSearchDist = 0) const;
 
+		size_t getSpectatorCacheIndex() const {
+			return spectatorCacheIndex;
+		}
+		size_t getSpectatorPlayerCacheIndex() const {
+			return spectatorPlayerCacheIndex;
+		}
+		void setSpectatorCacheIndex(size_t newIndex) {
+			spectatorCacheIndex = newIndex;
+		}
+		void setSpectatorPlayerCacheIndex(size_t newIndex) {
+			spectatorPlayerCacheIndex = newIndex;
+		}
+
 		void incrementReferenceCounter() {
 			++referenceCounter;
 		}
@@ -536,6 +549,9 @@ class Creature : virtual public Thing
 		bool hiddenHealth = false;
 		bool canUseDefense = true;
 		bool movementBlocked = false;
+
+		size_t spectatorCacheIndex = 0;
+		size_t spectatorPlayerCacheIndex = 0;
 
 		//creature script events
 		bool hasEventRegistered(CreatureEventType_t event) const {

@@ -102,6 +102,14 @@ class QTreeLeafNode;
 
 class MapQuadrant
 {
+	struct CreatureData {
+		CreatureData(const Position& position, Creature* creature) : position(position), creature(creature) {}
+		Position position;
+		Creature* creature = nullptr;
+	};
+
+	using CreatureDataVector = std::vector<CreatureData>;
+
 	public:
 		MapQuadrant() = default;
 		~MapQuadrant();
@@ -115,13 +123,13 @@ class MapQuadrant
 			return array[z];
 		}
 
-		void addCreature(Creature* c);
+		void addCreature(Creature* c, const Position& newPosition);
 		void removeCreature(Creature* c);
-
+		void updateCreaturePosition(Creature* c, const Position& newPosition);
 	private:
 		Floor* array[MAP_MAX_LAYERS] = {};
-		CreatureVector creature_list;
-		CreatureVector player_list;
+		CreatureDataVector creatureVec;
+		CreatureDataVector playerVec;
 
 		friend class Map;
 };
