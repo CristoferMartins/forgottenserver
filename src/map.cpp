@@ -889,35 +889,35 @@ Floor* MapQuadrant::createFloor(uint32_t z)
 
 void MapQuadrant::addCreature(Creature* c, const Position& newPosition)
 {
-	c->setSpectatorCacheIndex(creatureVec.size());
+	c->setMapQuadrantCacheIndex(creatureVec.size());
 	creatureVec.emplace_back(newPosition, c);
 
 	if (c->getPlayer()) {
-		c->setSpectatorPlayerCacheIndex(playerVec.size());
+		c->setMapQuadrantPlayerCacheIndex(playerVec.size());
 		playerVec.emplace_back(newPosition, c);
 	}
 }
 
 void MapQuadrant::removeCreature(Creature* c)
 {
-	size_t spectatorCacheIndex = c->getSpectatorCacheIndex();
-	creatureVec[spectatorCacheIndex] = creatureVec.back();
-	creatureVec[spectatorCacheIndex].creature->setSpectatorCacheIndex(spectatorCacheIndex);
+	size_t mapQuadrantCacheIndex = c->getMapQuadrantCacheIndex();
+	creatureVec[mapQuadrantCacheIndex] = creatureVec.back();
+	creatureVec[mapQuadrantCacheIndex].creature->setMapQuadrantCacheIndex(mapQuadrantCacheIndex);
 	creatureVec.pop_back();
 
 	if (c->getPlayer()) {
-		size_t spectatorPlayerCacheIndex = c->getSpectatorPlayerCacheIndex();
-		playerVec[spectatorPlayerCacheIndex] = playerVec.back();
-		playerVec[spectatorPlayerCacheIndex].creature->setSpectatorPlayerCacheIndex(spectatorPlayerCacheIndex);
+		size_t mapQuadrantPlayerCacheIndex = c->getMapQuadrantPlayerCacheIndex();
+		playerVec[mapQuadrantPlayerCacheIndex] = playerVec.back();
+		playerVec[mapQuadrantPlayerCacheIndex].creature->setMapQuadrantPlayerCacheIndex(mapQuadrantPlayerCacheIndex);
 		playerVec.pop_back();
 	}
 }
 
 void MapQuadrant::updateCreaturePosition(Creature* c, const Position& newPosition)
 {
-	creatureVec[c->getSpectatorCacheIndex()].position = newPosition;
+	creatureVec[c->getMapQuadrantCacheIndex()].position = newPosition;
 	if (c->getPlayer()) {
-		playerVec[c->getSpectatorPlayerCacheIndex()].position = newPosition;
+		playerVec[c->getMapQuadrantPlayerCacheIndex()].position = newPosition;
 	}
 }
 

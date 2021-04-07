@@ -458,17 +458,17 @@ class Creature : virtual public Thing
 		bool getPathTo(const Position& targetPos, std::vector<Direction>& dirList, const FindPathParams& fpp) const;
 		bool getPathTo(const Position& targetPos, std::vector<Direction>& dirList, int32_t minTargetDist, int32_t maxTargetDist, bool fullPathSearch = true, bool clearSight = true, int32_t maxSearchDist = 0) const;
 
-		size_t getSpectatorCacheIndex() const {
-			return spectatorCacheIndex;
+		size_t getMapQuadrantCacheIndex() const {
+			return mapQuadrantCacheIndex;
 		}
-		size_t getSpectatorPlayerCacheIndex() const {
-			return spectatorPlayerCacheIndex;
+		size_t getMapQuadrantPlayerCacheIndex() const {
+			return mapQuadrantPlayerCacheIndex;
 		}
-		void setSpectatorCacheIndex(size_t newIndex) {
-			spectatorCacheIndex = newIndex;
+		void setMapQuadrantCacheIndex(size_t newIndex) {
+			mapQuadrantCacheIndex = newIndex;
 		}
-		void setSpectatorPlayerCacheIndex(size_t newIndex) {
-			spectatorPlayerCacheIndex = newIndex;
+		void setMapQuadrantPlayerCacheIndex(size_t newIndex) {
+			mapQuadrantPlayerCacheIndex = newIndex;
 		}
 
 		void incrementReferenceCounter() {
@@ -550,8 +550,8 @@ class Creature : virtual public Thing
 		bool canUseDefense = true;
 		bool movementBlocked = false;
 
-		size_t spectatorCacheIndex = 0;
-		size_t spectatorPlayerCacheIndex = 0;
+		size_t mapQuadrantCacheIndex = 0;
+		size_t mapQuadrantPlayerCacheIndex = 0;
 
 		//creature script events
 		bool hasEventRegistered(CreatureEventType_t event) const {
