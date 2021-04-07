@@ -101,6 +101,10 @@ void Map::setTile(uint16_t x, uint16_t y, uint8_t z, Tile* newTile)
 	}
 
 	MapQuadrant* quadrant = createQuadrant(x, y);
+	if (!quadrant) {
+		std::cout << "ERROR, invalid quadrant: Attempt to set tile on invalid coordinate " << Position(x, y, z) << "!" << std::endl;
+		return;
+	}
 
 	Floor* floor = quadrant->createFloor(z);
 	uint32_t offsetX = x & FLOOR_MASK;
