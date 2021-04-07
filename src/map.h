@@ -83,8 +83,8 @@ static constexpr int32_t FLOOR_BITS = 5;
 static constexpr int32_t FLOOR_SIZE = (1 << FLOOR_BITS);
 static constexpr int32_t FLOOR_MASK = (FLOOR_SIZE - 1);
 
-static constexpr int32_t QUADRANT_ARRAY_X_SIZE = static_cast<int32_t>(static_cast<float>(MAX_MAP_WIDTH) / FLOOR_SIZE + 1) + 1;
-static constexpr int32_t QUADRANT_ARRAY_Y_SIZE = static_cast<int32_t>(static_cast<float>(MAX_MAP_HEIGHT) / FLOOR_SIZE + 1) + 1;
+static constexpr int32_t QUADRANT_ARRAY_X_SIZE = ((MAX_MAP_WIDTH + (FLOOR_SIZE -1)) / FLOOR_SIZE) + 1;
+static constexpr int32_t QUADRANT_ARRAY_Y_SIZE = ((MAX_MAP_HEIGHT + (FLOOR_SIZE - 1)) / FLOOR_SIZE) + 1;
 
 struct Floor {
 	constexpr Floor() = default;
@@ -230,22 +230,18 @@ class Map
 			if (x > MAX_MAP_WIDTH || y > MAX_MAP_HEIGHT) {
 				return nullptr;
 			}
-			size_t arrayX = std::floor(static_cast<float>(x) / FLOOR_SIZE);
-			size_t arrayY = std::floor(static_cast<float>(y) / FLOOR_SIZE);
-			return quadrantArray[arrayX][arrayY];
+			return quadrantArray[x / FLOOR_SIZE][y / FLOOR_SIZE];
 		}
 
 		MapQuadrant* createQuadrant(uint16_t x, uint16_t y) {
 			if (x > MAX_MAP_WIDTH || y > MAX_MAP_HEIGHT) {
 				return nullptr;
 			}
-			size_t arrayX = std::floor(static_cast<float>(x) / FLOOR_SIZE);
-			size_t arrayY = std::floor(static_cast<float>(y) / FLOOR_SIZE);
-
+			auto arrayX = x / FLOOR_SIZE;
+			auto arrayY = y / FLOOR_SIZE;
 			if (!quadrantArray[arrayX][arrayY]) {
 				quadrantArray[arrayX][arrayY] = new MapQuadrant();
 			}
-
 			return quadrantArray[arrayX][arrayY];
 		}
 
