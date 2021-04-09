@@ -86,6 +86,9 @@ static constexpr int32_t FLOOR_MASK = (FLOOR_SIZE - 1);
 static constexpr int32_t QUADRANT_ARRAY_X_SIZE = ((MAX_MAP_WIDTH + (FLOOR_SIZE -1)) / FLOOR_SIZE) + 1;
 static constexpr int32_t QUADRANT_ARRAY_Y_SIZE = ((MAX_MAP_HEIGHT + (FLOOR_SIZE - 1)) / FLOOR_SIZE) + 1;
 
+static constexpr int32_t QUADRANT_ARRAY_X_LIMIT = QUADRANT_ARRAY_X_SIZE - 1;
+static constexpr int32_t QUADRANT_ARRAY_Y_LIMIT = QUADRANT_ARRAY_Y_SIZE - 1;
+
 struct Floor {
 	constexpr Floor() = default;
 	~Floor();

@@ -342,14 +342,18 @@ void Map::getSpectatorsInternal(SpectatorVec& spectators, const Position& center
 	uint16_t x2 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_x + maxoffset)));
 	uint16_t y2 = std::min<uint32_t>(0xFFFF, std::max<int32_t>(0, (max_y + maxoffset)));
 
-	int32_t startx1 = x1 - (x1 % FLOOR_SIZE);
-	int32_t starty1 = y1 - (y1 % FLOOR_SIZE);
-	int32_t endx2 = x2 - (x2 % FLOOR_SIZE);
-	int32_t endy2 = y2 - (y2 % FLOOR_SIZE);
+	int32_t startx1 = x1 / FLOOR_SIZE;
+	int32_t starty1 = y1 / FLOOR_SIZE;
+	int32_t endx2 = x2 / FLOOR_SIZE;
+	int32_t endy2 = y2 / FLOOR_SIZE;
 
-	for (int_fast32_t ny = starty1; ny <= endy2; ny += FLOOR_SIZE) {
-		for (int_fast32_t nx = startx1; nx <= endx2; nx += FLOOR_SIZE) {
-			if (MapQuadrant* quadrant = getQuadrant(nx, ny)) {
+	if (startx1 > QUADRANT_ARRAY_X_LIMIT || starty1 > QUADRANT_ARRAY_Y_LIMIT || endx2 > QUADRANT_ARRAY_X_LIMIT || endy2 > QUADRANT_ARRAY_Y_LIMIT) {
+		return;
+	}
+
+	for (int_fast32_t nx = startx1; nx <= endx2; nx++) {
+		for (int_fast32_t ny = starty1; ny <= endy2; ny++) {
+			if (MapQuadrant* quadrant = quadrantArray[nx][ny]) {
 				auto& creatureDataVec = (onlyPlayers ? quadrant->playerVec : quadrant->creatureVec);
 				for (auto& creatureData : creatureDataVec) {
 					const Position& cpos = creatureData.position;
